@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Interior Budget Planner</title>
+
+    <style>
+        body {
+            
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        #loader {
+            display: none;
+            text-align: center;
+            margin-top: 25px;
+            padding: 20px;
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .spinner {
+            width: 35px;
+            height: 35px;
+            margin: 0 auto 10px;
+            border: 4px solid #ddd;
+            border-top: 4px solid #222;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #resultBox {
+            display: none;
+            margin-top: 30px;
+        }
+
+        #resultBox h3 {
+            margin-bottom: 15px;
+        }
+
+        #result {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .error {
+            color: #b00020;
+            background: #ffecec;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>🏠 Home Interior Budget Planner</h2>
+
+    <form id="homeBudgetForm">
+
+        <label>Budget (₹):</label>
+        <input
+            type="number"
+            id="budget"
+            name="budget"
+            placeholder="e.g. 50000"
+            required
+        >
+
+        <label>Required Items / Rooms:</label>
+        <input
+            type="text"
+            id="rooms"
+            name="rooms"
+            placeholder="e.g. Living room, Bedroom, Kitchen"
+            required
+        >
+
+        <button type="submit" id="submitButton">
+            Get Recommendations
+        </button>
+
+    </form>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <div>🤖 Generating AI Recommendations...</div>
+        <small>Please wait...</small>
+    </div>
+
+    <div id="resultBox">
+        <h3>🤖 AI Recommendations:</h3>
+        <div id="result"></div>
+    </div>
+
+</div>
+
+<script>
+    const form = document.getElementById("homeBudgetForm");
+    const loader = document.getElementById("loader");
+    const resultBox = document.getElementById("resultBox");
+    const result = document.getElementById("result");
+    const submitButton = document.getElementById("submitButton");
+
+    form.addEventListener("submit", async function(event) {
+
+        // Stop normal form submission
+        event.preventDefault();
+
+        // Show loading
+        loader.style.display = "block";
+        resultBox.style.display = "none";
+
+        submitButton.disabled = true;
+        submitButton.textContent = "⏳ Generating...";
+
+        const formData = new FormData(form);
+
+        try {
+
+            const response = await fetch("/api/home-budget", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+
+                result.textContent = data.recommendation;
+
+                resultBox.style.display = "block";
+
+            } else {
+
+                result.innerHTML =
+                    '<div class="error">Something went wrong.</div>';
+
+                resultBox.style.display = "block";
+            }
+
+        } catch (error) {
+
+            result.innerHTML =
+                '<div class="error">Unable to generate recommendations. Please try again.</div>';
+
+            resultBox.style.display = "block";
+
+        } finally {
+
+            loader.style.display = "none";
+
+            submitButton.disabled = false;
+            submitButton.textContent = "Get Recommendations";
+        }
+    });
+</script>
+
+</body>
+</html>

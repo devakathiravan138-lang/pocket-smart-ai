@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jewelry Budget Planner</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 20px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin-top: 8px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.7;
+        }
+
+        #loader {
+            display: none;
+            text-align: center;
+            margin-top: 25px;
+            padding: 20px;
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .spinner {
+            width: 35px;
+            height: 35px;
+            margin: 0 auto 10px;
+            border: 4px solid #ddd;
+            border-top: 4px solid #222;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #resultBox {
+            display: none;
+            margin-top: 30px;
+        }
+
+        #result {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .error {
+            color: #b00020;
+            background: #ffecec;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>💎 Jewelry Budget Planner</h2>
+
+    <form id="jewelryBudgetForm">
+
+        <label for="budget">Total Budget (₹):</label>
+
+        <input
+            type="number"
+            id="budget"
+            name="budget"
+            placeholder="e.g. 50000"
+            min="1"
+            required
+        >
+
+        <label for="jewelry_type">Jewelry Type:</label>
+
+        <select
+            id="jewelry_type"
+            name="jewelry_type"
+            required
+        >
+            <option value="" selected disabled>
+                Select Jewelry
+            </option>
+
+            <option value="Necklace">Necklace</option>
+            <option value="Earrings">Earrings</option>
+            <option value="Ring">Ring</option>
+            <option value="Bangles">Bangles</option>
+            <option value="Chain">Chain</option>
+            <option value="Bracelet">Bracelet</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label for="image">
+            Upload Jewelry Image (Optional):
+        </label>
+
+        <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+        >
+
+        <button
+            type="submit"
+            id="submitButton"
+        >
+            Get Recommendations
+        </button>
+
+    </form>
+
+    <div id="loader">
+
+        <div class="spinner"></div>
+
+        <div>
+            🤖 Generating AI Recommendations...
+        </div>
+
+        <small>Please wait...</small>
+
+    </div>
+
+    <div id="resultBox">
+
+        <h3>🤖 AI Recommendations:</h3>
+
+        <div id="result"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+const form = document.getElementById("jewelryBudgetForm");
+const loader = document.getElementById("loader");
+const resultBox = document.getElementById("resultBox");
+const result = document.getElementById("result");
+const submitButton = document.getElementById("submitButton");
+
+
+form.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const jewelryType =
+        document.getElementById("jewelry_type").value;
+
+    if (!jewelryType) {
+
+        alert("Please select a jewelry type.");
+
+        return;
+    }
+
+    loader.style.display = "block";
+    resultBox.style.display = "none";
+
+    submitButton.disabled = true;
+    submitButton.textContent = "⏳ Generating...";
+
+
+    const formData = new FormData(form);
+
+
+    try {
+
+        const response = await fetch(
+            "/api/jewelry-budget",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+
+        const data = await response.json();
+
+
+        if (data.success) {
+
+            result.textContent = data.recommendation;
+
+            resultBox.style.display = "block";
+
+        } else {
+
+            result.innerHTML =
+                '<div class="error">Something went wrong.</div>';
+
+            resultBox.style.display = "block";
+        }
+
+
+    } catch (error) {
+
+        result.innerHTML =
+            '<div class="error">' +
+            'Unable to generate recommendations. ' +
+            'Please try again.' +
+            '</div>';
+
+        resultBox.style.display = "block";
+
+    } finally {
+
+        loader.style.display = "none";
+
+        submitButton.disabled = false;
+
+        submitButton.textContent = "Get Recommendations";
+    }
+
+});
+
+</script>
+
+</body>
+</html>
